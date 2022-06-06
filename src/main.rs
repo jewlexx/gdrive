@@ -7,5 +7,7 @@ lazy_static! {
 }
 
 fn main() {
+    // Initialize client info straight away
+    lazy_static::initialize(&CLIENT_INFO);
     println!("Hello, world!");
 }

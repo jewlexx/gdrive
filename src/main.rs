@@ -2,8 +2,10 @@ mod client;
 
 use lazy_static::lazy_static;
 
+use client::credentials::ClientInfo;
+
 lazy_static! {
-    static ref CLIENT_INFO: client::ClientInfo = client::ClientInfo::new().unwrap();
+    static ref CLIENT_INFO: ClientInfo = ClientInfo::new().unwrap();
 }
 
 fn main() {

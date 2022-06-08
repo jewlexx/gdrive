@@ -2,7 +2,7 @@ mod client;
 mod net;
 
 use std::{
-    io::{self, Write},
+    io::{self, Read, Write},
     net::{SocketAddr, TcpListener, TcpStream},
 };
 
@@ -15,7 +15,21 @@ lazy_static! {
 }
 
 fn handle_stream(mut stream: TcpStream, addr: SocketAddr) -> io::Result<()> {
-    stream.write_all(b"bonjour")?;
+    let mut buf = Vec::<u8>::new();
+
+    loop {
+        let n = stream.read_to_end(&mut buf)?;
+
+        if n == 0 {
+            return Ok(());
+        }
+
+        let request = String::from_utf8_lossy(&buf[..n]);
+        println!("Request: {}", request);
+
+        let response = format!("{}", request);
+        stream.write_all(response.as_bytes())?;
+    }
 
     Ok(())
 }

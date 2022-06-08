@@ -48,7 +48,7 @@ fn main() -> anyhow::Result<()> {
     // Initialize client info straight away
     lazy_static::initialize(&CLIENT_INFO);
 
-    let (tx, rx) = channel::<u8>();
+    let (tx, rx) = tokio::sync::oneshot::channel::<u8>();
 
     let listener = TcpListener::bind("127.0.0.1:0")?;
 

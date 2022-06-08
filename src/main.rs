@@ -2,12 +2,17 @@ mod client;
 mod net;
 
 use std::{
+    convert::Infallible,
     io::{self, Read, Write},
     net::{SocketAddr, TcpListener, TcpStream},
 };
 
+use hyper::{
+    server::conn::AddrStream,
+    service::{make_service_fn, service_fn},
+    Body, Request, Response,
+};
 use lazy_static::lazy_static;
-use warp::Filter;
 
 use client::credentials::ClientInfo;
 use net::get_loopback;
@@ -43,6 +48,18 @@ fn main() -> anyhow::Result<()> {
     lazy_static::initialize(&CLIENT_INFO);
 
     let listener = TcpListener::bind("127.0.0.1:0")?;
+
+    let svc = make_service_fn(|socket: &AddrStream| {
+        let remote_addr = socket.remote_addr();
+        async move {
+            Ok::<_, Infallible>(service_fn(move |_: Request<Body>| async move {
+                Ok::<_, Infallible>(Response::new(Body::from(format!(
+                    "Hello, {}!",
+                    remote_addr
+                ))))
+            }))
+        }
+    });
 
     let addr = get_loopback()?;
     let builder = hyper::Server::bind(&addr);

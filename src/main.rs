@@ -5,6 +5,7 @@ use std::{
     convert::Infallible,
     io::{self, Read, Write},
     net::{SocketAddr, TcpListener, TcpStream},
+    sync::mpsc::channel,
 };
 
 use hyper::{
@@ -47,12 +48,14 @@ fn main() -> anyhow::Result<()> {
     // Initialize client info straight away
     lazy_static::initialize(&CLIENT_INFO);
 
+    let (tx, rx) = channel::<u8>();
+
     let listener = TcpListener::bind("127.0.0.1:0")?;
 
     let svc = make_service_fn(|socket: &AddrStream| {
         let remote_addr = socket.remote_addr();
         async move {
-            Ok::<_, Infallible>(service_fn(move |_: Request<Body>| async move {
+            Ok::<_, Infallible>(service_fn(move |req: Request<Body>| async move {
                 Ok::<_, Infallible>(Response::new(Body::from(format!(
                     "Hello, {}!",
                     remote_addr

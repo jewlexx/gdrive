@@ -7,29 +7,33 @@ use std::{
 };
 
 use lazy_static::lazy_static;
+use warp::Filter;
 
 use client::credentials::ClientInfo;
+use net::get_loopback;
+
+const RESPONSE: &[u8] = include_bytes!("response.html");
 
 lazy_static! {
     static ref CLIENT_INFO: ClientInfo = ClientInfo::new().unwrap();
 }
 
 fn handle_stream(mut stream: TcpStream, addr: SocketAddr) -> io::Result<()> {
+    println!("Got connection");
     let mut buf = Vec::<u8>::new();
 
-    loop {
-        let n = stream.read_to_end(&mut buf)?;
+    // loop {
+    let n = stream.read(&mut buf)?;
 
-        if n == 0 {
-            return Ok(());
-        }
+    // if n == 0 {
+    //     return Ok(());
+    // }
 
-        let request = String::from_utf8_lossy(&buf[..n]);
-        println!("Request: {}", request);
+    let request = String::from_utf8_lossy(&buf[..n]);
+    println!("Request: {}", request);
 
-        let response = format!("{}", request);
-        stream.write_all(response.as_bytes())?;
-    }
+    stream.write_all(RESPONSE)?;
+    // }
 
     Ok(())
 }
@@ -40,14 +44,15 @@ fn main() -> anyhow::Result<()> {
 
     let listener = TcpListener::bind("127.0.0.1:0")?;
 
-    println!("Listening on http://{}", listener.local_addr()?);
+    let addr = get_loopback()?;
+    let builder = hyper::Server::bind(&addr);
 
-    loop {
-        match listener.accept() {
-            Ok((socket, addr)) => handle_stream(socket, addr)?,
-            Err(e) => println!("couldn't get client: {e:?}"),
-        }
+    // loop {
+    match listener.accept() {
+        Ok((socket, addr)) => handle_stream(socket, addr)?,
+        Err(e) => println!("couldn't get client: {e:?}"),
     }
+    // }
 
     Ok(())
 }

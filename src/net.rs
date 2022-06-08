@@ -1,6 +1,6 @@
 use std::{
     io,
-    net::{Ipv4Addr, SocketAddrV4, TcpListener},
+    net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener},
 };
 
 pub fn get_unused_port() -> io::Result<u16> {
@@ -11,9 +11,9 @@ pub fn get_unused_port() -> io::Result<u16> {
     Ok(addr.port())
 }
 
-pub fn get_loopback() -> io::Result<SocketAddrV4> {
+pub fn get_loopback() -> io::Result<SocketAddr> {
     let port = get_unused_port()?;
-    let ip_addr = Ipv4Addr::new(127, 0, 0, 1);
+    let ip_addr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
 
-    Ok(SocketAddrV4::new(ip_addr, port))
+    Ok(SocketAddr::new(ip_addr, port))
 }

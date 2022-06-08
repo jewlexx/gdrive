@@ -1,7 +1,10 @@
 mod client;
 mod net;
 
-use std::net::TcpListener;
+use std::{
+    io::{self, Write},
+    net::{SocketAddr, TcpListener, TcpStream},
+};
 
 use lazy_static::lazy_static;
 
@@ -11,17 +14,25 @@ lazy_static! {
     static ref CLIENT_INFO: ClientInfo = ClientInfo::new().unwrap();
 }
 
+fn handle_stream(mut stream: TcpStream, addr: SocketAddr) -> io::Result<()> {
+    stream.write_all(b"bonjour")?;
+
+    Ok(())
+}
+
 fn main() -> anyhow::Result<()> {
     // Initialize client info straight away
     lazy_static::initialize(&CLIENT_INFO);
 
     let listener = TcpListener::bind("127.0.0.1:0")?;
 
-    println!("Listening on {}", listener.local_addr()?);
+    println!("Listening on http://{}", listener.local_addr()?);
 
-    match listener.accept() {
-        Ok((_socket, addr)) => println!("new client: {addr:?}"),
-        Err(e) => println!("couldn't get client: {e:?}"),
+    loop {
+        match listener.accept() {
+            Ok((socket, addr)) => handle_stream(socket, addr)?,
+            Err(e) => println!("couldn't get client: {e:?}"),
+        }
     }
 
     Ok(())

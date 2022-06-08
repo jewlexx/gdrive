@@ -65,7 +65,9 @@ fn main() -> anyhow::Result<()> {
     });
 
     let addr = get_loopback()?;
-    let builder = hyper::Server::bind(&addr);
+    let server = hyper::Server::bind(&addr).serve(svc);
+
+    server.with_graceful_shutdown(async move {});
 
     // loop {
     match listener.accept() {

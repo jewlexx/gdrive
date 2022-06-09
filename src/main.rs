@@ -44,7 +44,8 @@ fn handle_stream(mut stream: TcpStream, addr: SocketAddr) -> io::Result<()> {
     Ok(())
 }
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     // Initialize client info straight away
     lazy_static::initialize(&CLIENT_INFO);
 
@@ -56,15 +57,17 @@ fn main() -> anyhow::Result<()> {
         let remote_addr = socket.remote_addr();
         async move {
             Ok::<_, Infallible>(service_fn(move |req: Request<Body>| async move {
+                let query = req.uri().query().unwrap_or("");
                 Ok::<_, Infallible>(Response::new(Body::from(format!(
                     "Hello, {}!",
-                    remote_addr
+                    query
                 ))))
             }))
         }
     });
 
     let addr = get_loopback()?;
+    println!("Listening on http://{}", addr);
     let server = hyper::Server::bind(&addr).serve(svc);
 
     server.with_graceful_shutdown(async move {});

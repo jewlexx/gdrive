@@ -91,7 +91,7 @@ async fn main() -> anyhow::Result<()> {
 
     let redirect_uri = {
         let info = CLIENT_INFO.credentials;
-        let endpoint = format!("{AUTH_ENDPOINT}/?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id); 
+        format!("{AUTH_ENDPOINT}/?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id)
     };
 
     let svc = make_service_fn(|socket: &AddrStream| {

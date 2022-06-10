@@ -15,7 +15,7 @@ use hyper::{
 };
 use lazy_static::lazy_static;
 
-use client::credentials::ClientInfo;
+use client::{credentials::ClientInfo, AUTH_ENDPOINT};
 use net::get_loopback;
 
 const RESPONSE: &[u8] = include_bytes!("response.html");
@@ -44,22 +44,64 @@ fn handle_stream(mut stream: TcpStream, addr: SocketAddr) -> io::Result<()> {
     Ok(())
 }
 
+#[derive(Debug)]
+struct Query {
+    pub code: Option<String>,
+}
+
+impl Query {
+    pub fn from_query_string(query: &str) -> Result<Self, String> {
+        let opts = query.split('&');
+
+        let mut query = Self {
+            code: None,
+        };
+
+        for opt in opts {
+            let mut kv = opt.split('=');
+
+            match kv.next() {
+                Some("code") => query.code = kv.last().map(String::from),
+                Some("error") => if let Some(err) = kv.last() {
+                    return Err(String::from(err));
+                },
+                _ => continue,
+            }
+        }
+
+        Ok(query)
+    }
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Initialize client info straight away
     lazy_static::initialize(&CLIENT_INFO);
 
-    let (tx, rx) = tokio::sync::oneshot::channel::<u8>();
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<u8>(8);
 
-    let listener = TcpListener::bind("127.0.0.1:0")?;
+    // let listener = TcpListener::bind("127.0.0.1:0")?;
+
+    {
+        let tx = tx.clone();
+        ctrlc::set_handler(move || {
+            tx.send(1);
+        })?;
+    }
+
+    let redirect_uri = {
+        let info = CLIENT_INFO.credentials;
+        let endpoint = format!("{AUTH_ENDPOINT}/?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id); 
+    };
 
     let svc = make_service_fn(|socket: &AddrStream| {
-        let remote_addr = socket.remote_addr();
         async move {
             Ok::<_, Infallible>(service_fn(move |req: Request<Body>| async move {
-                let query = req.uri().query().unwrap_or("");
+                let query_string = req.uri().query().unwrap_or("");
+                let query = Query::from_query_string(query_string);
+                println!("Got request");
                 Ok::<_, Infallible>(Response::new(Body::from(format!(
-                    "Hello, {}!",
+                    "Hello, {:?}!",
                     query
                 ))))
             }))
@@ -70,14 +112,9 @@ async fn main() -> anyhow::Result<()> {
     println!("Listening on http://{}", addr);
     let server = hyper::Server::bind(&addr).serve(svc);
 
-    server.with_graceful_shutdown(async move {});
+    let with_grace = server.with_graceful_shutdown(async move { rx.recv().await.expect("Failed to recieve"); });
 
-    // loop {
-    match listener.accept() {
-        Ok((socket, addr)) => handle_stream(socket, addr)?,
-        Err(e) => println!("couldn't get client: {e:?}"),
-    }
-    // }
+    with_grace.await?;
 
     Ok(())
 }

@@ -73,6 +73,12 @@ impl Query {
     }
 }
 
+fn get_redirect() -> String {
+
+        let info = &CLIENT_INFO.credentials;
+        format!("{AUTH_ENDPOINT}/?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id)
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Initialize client info straight away
@@ -85,20 +91,16 @@ async fn main() -> anyhow::Result<()> {
     {
         let tx = tx.clone();
         ctrlc::set_handler(move || {
-            tx.send(1);
+            tx.blocking_send(1).unwrap();
         })?;
     }
 
-    let redirect_uri = {
-        let info = &CLIENT_INFO.credentials;
-        format!("{AUTH_ENDPOINT}/?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id)
-    };
 
     let svc = make_service_fn(|socket: &AddrStream| {
         async move {
             Ok::<_, Infallible>(service_fn(move |req: Request<Body>| async move {
                 if req.uri() == "/"  {
-                    let res = Response::builder().status(302).header("Location", "https://www.rust-lang.org/").body(Body::from(""));
+                    let res = Response::builder().status(302).header("Location", get_redirect()).body(Body::from(""));
                     return res;
                 }
                 let query_string = req.uri().query().unwrap_or("");

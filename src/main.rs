@@ -11,7 +11,7 @@ use std::{
 use hyper::{
     server::conn::AddrStream,
     service::{make_service_fn, service_fn},
-    Body, Request, Response
+    Body, Request, Response,
 };
 use lazy_static::lazy_static;
 
@@ -53,18 +53,18 @@ impl Query {
     pub fn from_query_string(query: &str) -> Result<Self, String> {
         let opts = query.split('&');
 
-        let mut query = Self {
-            code: None,
-        };
+        let mut query = Self { code: None };
 
         for opt in opts {
             let mut kv = opt.split('=');
 
             match kv.next() {
                 Some("code") => query.code = kv.last().map(String::from),
-                Some("error") => if let Some(err) = kv.last() {
-                    return Err(String::from(err));
-                },
+                Some("error") => {
+                    if let Some(err) = kv.last() {
+                        return Err(String::from(err));
+                    }
+                }
                 _ => continue,
             }
         }
@@ -74,9 +74,8 @@ impl Query {
 }
 
 fn get_redirect() -> String {
-
-        let info = &CLIENT_INFO.credentials;
-        format!("{AUTH_ENDPOINT}/?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id)
+    let info = &CLIENT_INFO.credentials;
+    format!("{AUTH_ENDPOINT}/?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id)
 }
 
 #[tokio::main]
@@ -95,31 +94,31 @@ async fn main() -> anyhow::Result<()> {
         })?;
     }
 
-
-    let svc = make_service_fn(|socket: &AddrStream| {
-        async move {
-            Ok::<_, Infallible>(service_fn(move |req: Request<Body>| async move {
-                if req.uri() == "/"  {
-                    let res = Response::builder().status(302).header("Location", get_redirect()).body(Body::from(""));
-                    return res;
-                }
-                let query_string = req.uri().query().unwrap_or("");
-                let query = Query::from_query_string(query_string);
-                println!("Got request");
-                Response::builder().status(200).body(Body::from(format!(
-                    "Hello, {:?}!",
-                    query
-                )))
-            }))
-        }
+    let svc = make_service_fn(|socket: &AddrStream| async move {
+        Ok::<_, Infallible>(service_fn(move |req: Request<Body>| async move {
+            if req.uri() == "/" {
+                let res = Response::builder()
+                    .status(302)
+                    .header("Location", get_redirect())
+                    .body(Body::from(""));
+                return res;
+            }
+            let query_string = req.uri().query().unwrap_or("");
+            let query = Query::from_query_string(query_string);
+            println!("Got request");
+            Response::builder()
+                .status(200)
+                .body(Body::from(format!("Hello, {:?}!", query)))
+        }))
     });
 
     let addr = get_loopback()?;
     println!("Listening on http://{}", addr);
-    let server = 
-        hyper::Server::bind(&addr).serve(svc);
+    let server = hyper::Server::bind(&addr).serve(svc);
 
-    let with_grace = server.with_graceful_shutdown(async move { rx.recv().await.expect("Failed to recieve"); });
+    let with_grace = server.with_graceful_shutdown(async move {
+        rx.recv().await.expect("Failed to recieve");
+    });
 
     with_grace.await?;
 

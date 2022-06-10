@@ -75,7 +75,7 @@ impl Query {
 
 fn get_redirect() -> String {
     let info = &CLIENT_INFO.credentials;
-    format!("{AUTH_ENDPOINT}/?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id)
+    format!("{AUTH_ENDPOINT}?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id)
 }
 
 #[tokio::main]

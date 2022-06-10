@@ -11,7 +11,7 @@ use std::{
 use hyper::{
     server::conn::AddrStream,
     service::{make_service_fn, service_fn},
-    Body, Request, Response,
+    Body, Request, Response
 };
 use lazy_static::lazy_static;
 
@@ -90,27 +90,32 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let redirect_uri = {
-        let info = CLIENT_INFO.credentials;
+        let info = &CLIENT_INFO.credentials;
         format!("{AUTH_ENDPOINT}/?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id)
     };
 
     let svc = make_service_fn(|socket: &AddrStream| {
         async move {
             Ok::<_, Infallible>(service_fn(move |req: Request<Body>| async move {
+                if req.uri() == "/"  {
+                    let res = Response::builder().status(302).header("Location", "https://www.rust-lang.org/").body(Body::from(""));
+                    return res;
+                }
                 let query_string = req.uri().query().unwrap_or("");
                 let query = Query::from_query_string(query_string);
                 println!("Got request");
-                Ok::<_, Infallible>(Response::new(Body::from(format!(
+                Response::builder().status(200).body(Body::from(format!(
                     "Hello, {:?}!",
                     query
-                ))))
+                )))
             }))
         }
     });
 
     let addr = get_loopback()?;
     println!("Listening on http://{}", addr);
-    let server = hyper::Server::bind(&addr).serve(svc);
+    let server = 
+        hyper::Server::bind(&addr).serve(svc);
 
     let with_grace = server.with_graceful_shutdown(async move { rx.recv().await.expect("Failed to recieve"); });
 

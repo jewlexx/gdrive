@@ -75,7 +75,13 @@ impl Query {
 
 fn get_redirect() -> String {
     let info = &CLIENT_INFO.credentials;
-    format!("{AUTH_ENDPOINT}?client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id)
+    let query = format!("client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id);
+    let mut url = String::from(AUTH_ENDPOINT);
+    url.push('?');
+
+    url_escape::encode_query_to_string(query, &mut url);
+
+    url
 }
 
 #[tokio::main]
@@ -97,11 +103,10 @@ async fn main() -> anyhow::Result<()> {
     let svc = make_service_fn(|socket: &AddrStream| async move {
         Ok::<_, Infallible>(service_fn(move |req: Request<Body>| async move {
             if req.uri() == "/" {
-                let res = Response::builder()
+                return Response::builder()
                     .status(302)
                     .header("Location", get_redirect())
                     .body(Body::from(""));
-                return res;
             }
             let query_string = req.uri().query().unwrap_or("");
             let query = Query::from_query_string(query_string);

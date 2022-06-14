@@ -20,9 +20,8 @@ pub async fn callback(query: Query<RedirectQuery>) -> impl IntoResponse {
             error: None,
         };
 
-        unsafe {
-            CLOSE_SERVER.clone().unwrap().send(client_info).unwrap();
-        }
+        let tx = CLOSE_SERVER.lock().clone().unwrap();
+        tx.send(client_info).unwrap();
 
         Response::new("Successfully redirected".into())
     } else {

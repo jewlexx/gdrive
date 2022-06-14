@@ -6,6 +6,7 @@ use std::net::SocketAddr;
 
 use axum::{routing::get, Router};
 use lazy_static::lazy_static;
+use parking_lot::{const_mutex, Mutex};
 use serde::Deserialize;
 use tokio::sync::mpsc;
 
@@ -21,7 +22,7 @@ lazy_static! {
     static ref REDIRECT_ADDR: SocketAddr = get_loopback().unwrap();
 }
 
-static mut CLOSE_SERVER: Option<Sender> = None;
+static CLOSE_SERVER: Mutex<Option<Sender>> = const_mutex(None);
 
 #[derive(Debug, Deserialize)]
 pub struct RedirectQuery {
@@ -41,9 +42,7 @@ async fn main() -> anyhow::Result<()> {
 
     let (tx, mut rx) = mpsc::unbounded_channel::<RedirectQuery>();
 
-    unsafe {
-        CLOSE_SERVER = Some(tx);
-    }
+    *CLOSE_SERVER.lock() = Some(tx);
 
     let addr = REDIRECT_ADDR.to_owned();
 

@@ -63,12 +63,16 @@ async fn main() -> anyhow::Result<()> {
 
     let addr = REDIRECT_ADDR.to_owned();
 
-    println!("Listening on http://{}", addr);
+    tracing::info!("Listening on http://{}", addr);
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
-            rx.recv().await;
+            let query = rx.recv().await;
+
+            if let Some(query) = query {
+                tracing::info!("Got code: {:?}", query.code.unwrap());
+            }
         })
         .await?;
 

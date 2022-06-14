@@ -17,7 +17,6 @@ use client::{credentials::ClientInfo, AUTH_ENDPOINT};
 use net::get_loopback;
 
 type Sender = mpsc::UnboundedSender<RedirectQuery>;
-type Receiver = mpsc::UnboundedReceiver<RedirectQuery>;
 
 lazy_static! {
     static ref CLIENT_INFO: ClientInfo = ClientInfo::new().unwrap();

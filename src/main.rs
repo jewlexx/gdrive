@@ -23,6 +23,7 @@ lazy_static! {
 }
 
 static CLOSE_SERVER: Mutex<Option<Sender>> = const_mutex(None);
+static USER_CODE: Mutex<Option<String>> = const_mutex(None);
 
 #[derive(Debug, Deserialize)]
 pub struct RedirectQuery {
@@ -54,7 +55,9 @@ async fn main() -> anyhow::Result<()> {
             let query = rx.recv().await;
 
             if let Some(query) = query {
-                tracing::info!("Got code: {:?}", query.code.unwrap());
+                let code = query.code.unwrap();
+                tracing::info!("Got code: {}", code);
+                *USER_CODE.lock() = Some(code);
             }
         })
         .await?;

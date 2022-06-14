@@ -75,7 +75,10 @@ impl Query {
 
 fn get_redirect() -> String {
     let info = &CLIENT_INFO.credentials;
-    let query = format!("client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline", info.client_id);
+    let query = format!(
+        "client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline",
+        info.client_id
+    );
     let mut url = String::from(AUTH_ENDPOINT);
     url.push('?');
 

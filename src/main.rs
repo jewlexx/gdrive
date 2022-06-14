@@ -1,6 +1,7 @@
 mod auth;
 mod client;
 mod net;
+mod user;
 
 use std::net::SocketAddr;
 

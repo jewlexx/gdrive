@@ -34,7 +34,7 @@ struct RedirectQuery {
 fn get_redirect(addr: &SocketAddr) -> String {
     let info = &CLIENT_INFO.credentials;
     let query = format!(
-        "client_id={}&redirect_uri=http://{addr}&response_type=code&access_type=offline&scope=https://www.googleapis.com/auth/drive",
+        "client_id={}&redirect_uri=http://{addr}/callback&response_type=code&access_type=offline&scope=https://www.googleapis.com/auth/drive",
         info.client_id
     );
     let mut url = String::from(AUTH_ENDPOINT);

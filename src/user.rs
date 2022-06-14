@@ -28,7 +28,7 @@ impl UserCredentials {
             "grant_type": "authorization_code",
             "client_id": client_id,
             "client_secret": client_secret,
-            "redirect_uri": redirect_uri,
+            "redirect_uri": "http://".to_owned() + &redirect_uri,
             "code": user_code,
         });
 

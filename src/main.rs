@@ -4,12 +4,7 @@ mod net;
 
 use std::net::SocketAddr;
 
-use axum::{
-    extract::Query,
-    response::{IntoResponse, Redirect, Response},
-    routing::get,
-    Router,
-};
+use axum::{routing::get, Router};
 use lazy_static::lazy_static;
 use serde::Deserialize;
 use tokio::sync::mpsc;

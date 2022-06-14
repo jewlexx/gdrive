@@ -51,8 +51,6 @@ async fn main() -> anyhow::Result<()> {
         .route("/", get(redirect))
         .route("/callback", get(callback));
 
-    // let listener = TcpListener::bind("127.0.0.1:0")?;
-
     let addr = get_loopback()?;
 
     tracing::debug!("Listening on http://{}", addr);

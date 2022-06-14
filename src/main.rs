@@ -1,12 +1,6 @@
 mod client;
 mod net;
 
-use std::{
-    convert::Infallible,
-    io::{self, Read, Write},
-    net::{SocketAddr, TcpListener, TcpStream},
-};
-
 use axum::{
     extract::Query,
     response::{IntoResponse, Redirect, Response},
@@ -14,6 +8,7 @@ use axum::{
     Router,
 };
 use lazy_static::lazy_static;
+use serde::Deserialize;
 use tokio::sync::mpsc;
 
 use client::{credentials::ClientInfo, AUTH_ENDPOINT};
@@ -27,7 +22,7 @@ lazy_static! {
     static ref CLOSE_SERVER: (Sender, Receiver) = mpsc::unbounded_channel::<RedirectQuery>();
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 struct RedirectQuery {
     pub code: Option<String>,
     pub error: Option<String>,
@@ -75,7 +70,8 @@ async fn redirect() -> impl IntoResponse {
     Redirect::temporary(&redirect_uri)
 }
 
-async fn callback(Query(query): Query<RedirectQuery>) -> impl IntoResponse {
+async fn callback(query: Query<RedirectQuery>) -> impl IntoResponse {
+    let query = query.0;
     if let Some(code) = query.code {
         let client_info = RedirectQuery {
             code: Some(code),
@@ -86,8 +82,10 @@ async fn callback(Query(query): Query<RedirectQuery>) -> impl IntoResponse {
 
         Response::new("Successfully redirected".into())
     } else {
-        let body = include_str!("../public/error.html")
-            .replace("%error_msg%", &query.error.unwrap_or("invalid code".into()));
+        let body = include_str!("../public/error.html").replace(
+            "%error_msg%",
+            &query.error.unwrap_or_else(|| "invalid code".into()),
+        );
 
         Response::new(body)
     }

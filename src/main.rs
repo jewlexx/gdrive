@@ -44,6 +44,7 @@ fn get_redirect() -> String {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt::init();
     // Initialize client info straight away
     lazy_static::initialize(&CLIENT_INFO);
 
@@ -53,7 +54,7 @@ async fn main() -> anyhow::Result<()> {
 
     let addr = get_loopback()?;
 
-    tracing::debug!("Listening on http://{}", addr);
+    println!("Listening on http://{}", addr);
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

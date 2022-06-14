@@ -21,9 +21,10 @@ type Receiver = mpsc::UnboundedReceiver<RedirectQuery>;
 
 lazy_static! {
     static ref CLIENT_INFO: ClientInfo = ClientInfo::new().unwrap();
-    static ref CLOSE_SERVER: (Sender, Receiver) = mpsc::unbounded_channel::<RedirectQuery>();
     static ref REDIRECT_ADDR: SocketAddr = get_loopback().unwrap();
 }
+
+static mut CLOSE_SERVER: Option<Sender> = None;
 
 #[derive(Debug, Deserialize)]
 struct RedirectQuery {
@@ -55,12 +56,21 @@ async fn main() -> anyhow::Result<()> {
         .route("/", get(redirect))
         .route("/callback", get(callback));
 
+    let (tx, mut rx) = mpsc::unbounded_channel::<RedirectQuery>();
+
+    unsafe {
+        CLOSE_SERVER = Some(tx);
+    }
+
     let addr = REDIRECT_ADDR.to_owned();
 
     println!("Listening on http://{}", addr);
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
+        .with_graceful_shutdown(async {
+            rx.recv().await;
+        })
         .await?;
 
     Ok(())
@@ -80,7 +90,9 @@ async fn callback(query: Query<RedirectQuery>) -> impl IntoResponse {
             error: None,
         };
 
-        CLOSE_SERVER.0.send(client_info).unwrap();
+        unsafe {
+            CLOSE_SERVER.clone().unwrap().send(client_info).unwrap();
+        }
 
         Response::new("Successfully redirected".into())
     } else {

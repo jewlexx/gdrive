@@ -1,3 +1,4 @@
+mod auth;
 mod client;
 mod net;
 
@@ -13,8 +14,10 @@ use lazy_static::lazy_static;
 use serde::Deserialize;
 use tokio::sync::mpsc;
 
-use client::{credentials::ClientInfo, AUTH_ENDPOINT};
+use client::credentials::ClientInfo;
 use net::get_loopback;
+
+use crate::auth::{callback, redirect};
 
 type Sender = mpsc::UnboundedSender<RedirectQuery>;
 
@@ -26,23 +29,9 @@ lazy_static! {
 static mut CLOSE_SERVER: Option<Sender> = None;
 
 #[derive(Debug, Deserialize)]
-struct RedirectQuery {
+pub struct RedirectQuery {
     pub code: Option<String>,
     pub error: Option<String>,
-}
-
-fn get_redirect(addr: &SocketAddr) -> String {
-    let info = &CLIENT_INFO.credentials;
-    let query = format!(
-        "client_id={}&redirect_uri=http://{addr}/callback&response_type=code&access_type=offline&scope=https://www.googleapis.com/auth/drive",
-        info.client_id
-    );
-    let mut url = String::from(AUTH_ENDPOINT);
-    url.push('?');
-
-    url_escape::encode_query_to_string(query, &mut url);
-
-    url
 }
 
 #[tokio::main]
@@ -77,33 +66,4 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     Ok(())
-}
-
-async fn redirect() -> impl IntoResponse {
-    let redirect_uri = get_redirect(&REDIRECT_ADDR);
-
-    Redirect::temporary(&redirect_uri)
-}
-
-async fn callback(query: Query<RedirectQuery>) -> impl IntoResponse {
-    let query = query.0;
-    if let Some(code) = query.code {
-        let client_info = RedirectQuery {
-            code: Some(code),
-            error: None,
-        };
-
-        unsafe {
-            CLOSE_SERVER.clone().unwrap().send(client_info).unwrap();
-        }
-
-        Response::new("Successfully redirected".into())
-    } else {
-        let body = include_str!("../public/error.html").replace(
-            "%error_msg%",
-            &query.error.unwrap_or_else(|| "invalid code".into()),
-        );
-
-        Response::new(body)
-    }
 }

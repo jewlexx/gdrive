@@ -4,10 +4,10 @@ use axum::{
     response::{IntoResponse, Redirect},
 };
 
-use crate::{client::get_redirect, RedirectQuery, CLOSE_SERVER, REDIRECT_ADDR};
+use crate::{client::get_redirect, RedirectQuery, CLOSE_SERVER};
 
 pub async fn redirect() -> impl IntoResponse {
-    let redirect_uri = get_redirect(&REDIRECT_ADDR);
+    let redirect_uri = get_redirect();
 
     Redirect::temporary(&redirect_uri)
 }

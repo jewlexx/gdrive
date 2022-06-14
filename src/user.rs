@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use crate::REDIRECT_ADDR;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserCredentials {
     /// The token that your application sends to authorize a Google API request.
@@ -21,10 +23,12 @@ impl UserCredentials {
         client_secret: &str,
         user_code: &str,
     ) -> Result<Self, reqwest::Error> {
+        let redirect_uri = REDIRECT_ADDR.to_string();
         let client_info = json!({
             "grant_type": "authorization_code",
             "client_id": client_id,
             "client_secret": client_secret,
+            "redirect_uri": redirect_uri,
             "code": user_code,
         });
 
@@ -34,9 +38,11 @@ impl UserCredentials {
             .json(&client_info)
             .send()
             .await?
-            .json()
+            .text()
             .await?;
 
-        Ok(response)
+        tracing::info!("{}", response);
+
+        Ok(serde_json::from_str(&response).unwrap())
     }
 }

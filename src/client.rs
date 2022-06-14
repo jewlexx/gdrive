@@ -1,12 +1,11 @@
-use std::net::SocketAddr;
-
-use crate::CLIENT_INFO;
+use crate::{CLIENT_INFO, REDIRECT_ADDR};
 
 pub mod credentials;
 
 pub const AUTH_ENDPOINT: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 
-pub fn get_redirect(addr: &SocketAddr) -> String {
+pub fn get_redirect() -> String {
+    let addr = REDIRECT_ADDR.to_string();
     let info = &CLIENT_INFO.credentials;
     let query = format!(
         "client_id={}&redirect_uri=http://{addr}/callback&response_type=code&access_type=offline&scope=https://www.googleapis.com/auth/drive",

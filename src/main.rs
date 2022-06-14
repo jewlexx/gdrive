@@ -14,7 +14,10 @@ use tokio::sync::mpsc;
 use client::credentials::ClientInfo;
 use net::get_loopback;
 
-use crate::auth::{callback, redirect};
+use crate::{
+    auth::{callback, redirect},
+    user::UserCredentials,
+};
 
 type Sender = mpsc::UnboundedSender<RedirectQuery>;
 
@@ -62,6 +65,17 @@ async fn main() -> anyhow::Result<()> {
             }
         })
         .await?;
+
+    let user_code = &*USER_CODE.lock().clone().unwrap();
+
+    let user_credentials = UserCredentials::get_credentials(
+        &CLIENT_INFO.credentials.client_id,
+        &CLIENT_INFO.credentials.client_secret,
+        user_code,
+    )
+    .await?;
+
+    tracing::info!("{:?}", user_credentials);
 
     Ok(())
 }

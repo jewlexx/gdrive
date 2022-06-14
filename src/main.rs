@@ -1,6 +1,8 @@
 mod client;
 mod net;
 
+use std::net::SocketAddr;
+
 use axum::{
     extract::Query,
     response::{IntoResponse, Redirect, Response},
@@ -20,6 +22,7 @@ type Receiver = mpsc::UnboundedReceiver<RedirectQuery>;
 lazy_static! {
     static ref CLIENT_INFO: ClientInfo = ClientInfo::new().unwrap();
     static ref CLOSE_SERVER: (Sender, Receiver) = mpsc::unbounded_channel::<RedirectQuery>();
+    static ref REDIRECT_ADDR: SocketAddr = get_loopback().unwrap();
 }
 
 #[derive(Debug, Deserialize)]
@@ -28,10 +31,10 @@ struct RedirectQuery {
     pub error: Option<String>,
 }
 
-fn get_redirect() -> String {
+fn get_redirect(addr: &SocketAddr) -> String {
     let info = &CLIENT_INFO.credentials;
     let query = format!(
-        "client_id={}&redirect_uri=http://127.0.0.1&response_type=code&access_type=offline",
+        "client_id={}&redirect_uri=http://{addr}&response_type=code&access_type=offline&scope=https://www.googleapis.com/auth/drive",
         info.client_id
     );
     let mut url = String::from(AUTH_ENDPOINT);
@@ -52,7 +55,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/", get(redirect))
         .route("/callback", get(callback));
 
-    let addr = get_loopback()?;
+    let addr = REDIRECT_ADDR.to_owned();
 
     println!("Listening on http://{}", addr);
 
@@ -64,7 +67,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn redirect() -> impl IntoResponse {
-    let redirect_uri = get_redirect();
+    let redirect_uri = get_redirect(&REDIRECT_ADDR);
 
     Redirect::temporary(&redirect_uri)
 }

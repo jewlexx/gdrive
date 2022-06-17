@@ -1,7 +1,6 @@
 mod auth;
 mod client;
 mod net;
-mod user;
 
 use std::net::SocketAddr;
 
@@ -14,10 +13,7 @@ use tokio::sync::mpsc;
 use client::credentials::ClientInfo;
 use net::get_loopback;
 
-use crate::{
-    auth::{callback, redirect},
-    user::UserCredentials,
-};
+use auth::{callback, redirect, user::UserCredentials};
 
 type Sender = mpsc::UnboundedSender<RedirectQuery>;
 

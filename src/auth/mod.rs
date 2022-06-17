@@ -4,6 +4,8 @@ use axum::{
     response::{IntoResponse, Redirect},
 };
 
+pub mod user;
+
 use crate::{client::get_redirect, RedirectQuery, CLOSE_SERVER};
 
 pub async fn redirect() -> impl IntoResponse {
@@ -26,7 +28,7 @@ pub async fn callback(query: Query<RedirectQuery>) -> impl IntoResponse {
 
         Response::new("Successfully redirected".into())
     } else {
-        let body = include_str!("../public/error.html").replace(
+        let body = include_str!("../../public/error.html").replace(
             "%error_msg%",
             &query.error.unwrap_or_else(|| "invalid code".into()),
         );

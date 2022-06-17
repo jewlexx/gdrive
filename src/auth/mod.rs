@@ -4,9 +4,13 @@ use axum::{
     response::{IntoResponse, Redirect},
 };
 
+pub mod client;
+
 pub mod user;
 
-use crate::{client::get_redirect, RedirectQuery, CLOSE_SERVER};
+use crate::{RedirectQuery, CLOSE_SERVER};
+
+use client::get_redirect;
 
 pub async fn redirect() -> impl IntoResponse {
     let redirect_uri = get_redirect();

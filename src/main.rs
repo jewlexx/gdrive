@@ -1,5 +1,4 @@
 mod auth;
-mod client;
 mod net;
 
 use std::net::SocketAddr;
@@ -10,10 +9,9 @@ use parking_lot::{const_mutex, Mutex};
 use serde::Deserialize;
 use tokio::sync::mpsc;
 
-use client::credentials::ClientInfo;
 use net::get_loopback;
 
-use auth::{callback, redirect, user::UserCredentials};
+use auth::{callback, client::credentials::ClientInfo, redirect, user::UserCredentials};
 
 type Sender = mpsc::UnboundedSender<RedirectQuery>;
 

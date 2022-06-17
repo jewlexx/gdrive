@@ -31,7 +31,9 @@ pub struct RedirectQuery {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::level_filters::STATIC_MAX_LEVEL)
+        .init();
     // Initialize client info straight away
     lazy_static::initialize(&CLIENT_INFO);
 
@@ -45,7 +47,11 @@ async fn main() -> anyhow::Result<()> {
 
     let addr = REDIRECT_ADDR.to_owned();
 
-    tracing::info!("Listening on http://{}", addr);
+    tracing::debug!("Listening on http://{addr}");
+    match open::that(format!("http::/{addr}")) {
+        Ok(()) => tracing::debug!("Opened login page in web browser"),
+        Err(e) => tracing::error!("Failed to open login page in web browser: {}", e),
+    }
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

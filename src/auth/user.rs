@@ -25,12 +25,12 @@ impl UserCredentials {
             "grant_type": "authorization_code",
             "client_id": client_id,
             "client_secret": client_secret,
-            "redirect_uri": "http://localhost",
+            "redirect_uri": url_escape::encode_component("http://localhost"),
             "code": user_code,
         });
 
         let response = reqwest::Client::new()
-            .post("https://oauth2.googleapis.com/token")
+            .post("https://www.googleapis.com/oauth2/v4/token")
             .header("Content-Type", "application/x-www-form-urlencoded")
             .json(&client_info)
             .send()
@@ -38,7 +38,7 @@ impl UserCredentials {
             .text()
             .await?;
 
-        tracing::info!("{}", response);
+        tracing::debug!("{}", response);
 
         Ok(serde_json::from_str(&response).unwrap())
     }

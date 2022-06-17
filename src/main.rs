@@ -47,8 +47,11 @@ async fn main() -> anyhow::Result<()> {
 
     let addr = REDIRECT_ADDR.to_owned();
 
-    tracing::debug!("Listening on http://{addr}");
-    match open::that(format!("http::/{addr}")) {
+    let address = addr.to_string();
+
+    tracing::debug!("Listening on http://{address}");
+
+    match open::that(address) {
         Ok(()) => tracing::debug!("Opened login page in web browser"),
         Err(e) => tracing::error!("Failed to open login page in web browser: {}", e),
     }

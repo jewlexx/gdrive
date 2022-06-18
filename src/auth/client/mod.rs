@@ -10,7 +10,9 @@ pub fn get_redirect() -> String {
     let challenge = (*CODE_CHALLENGE.lock()).clone().unwrap().1;
 
     let query = format!(
-        "client_id={client_id}&redirect_uri=http://{addr}/callback&response_type=code&access_type=offline&scope=https://www.googleapis.com/auth/drive&code_challenge={code_challenge}&code_challenge_method=S256",
+        "client_id={client_id}&redirect_uri={uri}&response_type=code&scope={scopes}&code_challenge={code_challenge}&code_challenge_method=S256",
+        scopes = url_escape::encode_component("https://www.googleapis.com/auth/drive"),
+        uri = url_escape::encode_component(&format!("http://{addr}/callback")),
         client_id = info.client_id,
         code_challenge = challenge,
     );
@@ -18,6 +20,8 @@ pub fn get_redirect() -> String {
     url.push('?');
 
     url_escape::encode_query_to_string(query, &mut url);
+
+    println!("{}", url);
 
     url
 }

@@ -16,8 +16,8 @@ use auth::{callback, client::credentials::ClientInfo, redirect, user::UserCreden
 type Sender = mpsc::UnboundedSender<RedirectQuery>;
 
 lazy_static! {
-    static ref CLIENT_INFO: ClientInfo = ClientInfo::new().unwrap();
-    static ref REDIRECT_ADDR: SocketAddr = get_loopback().unwrap();
+    static ref CLIENT_INFO: ClientInfo = ClientInfo::new().expect("cannot create client info");
+    static ref REDIRECT_ADDR: SocketAddr = get_loopback().expect("cannot get loopback address");
 }
 
 static CLOSE_SERVER: Mutex<Option<Sender>> = const_mutex(None);

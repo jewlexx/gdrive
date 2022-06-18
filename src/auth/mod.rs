@@ -5,8 +5,12 @@ use axum::{
 };
 
 pub mod client;
-
+mod error;
 pub mod user;
+
+pub use error::AuthError;
+
+pub type AuthResult<T> = Result<T, AuthError>;
 
 use crate::{RedirectQuery, CLOSE_SERVER};
 

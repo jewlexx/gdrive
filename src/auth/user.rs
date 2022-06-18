@@ -1,5 +1,8 @@
+use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+
+use super::AuthResult;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserCredentials {
@@ -20,7 +23,7 @@ impl UserCredentials {
         client_id: &str,
         client_secret: &str,
         user_code: &str,
-    ) -> Result<Self, reqwest::Error> {
+    ) -> AuthResult<Self> {
         let client_info = json!({
             "grant_type": "authorization_code",
             "client_id": client_id,
@@ -38,11 +41,15 @@ impl UserCredentials {
             .json()
             .await?;
 
-        if let Some(desc) = response.as_object().unwrap().get("error_description") {
+        if let Some(desc) = response
+            .as_object()
+            .context("cannot convert value to object")?
+            .get("error_description")
+        {
             tracing::error!("{desc}");
             panic!();
         }
 
-        Ok(response)
+        Ok(serde_json::from_value(response)?)
     }
 }

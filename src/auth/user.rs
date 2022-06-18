@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
+use crate::CODE_CHALLENGE;
+
 use super::AuthResult;
 
 pub fn get_challenge() -> AuthResult<(String, String)> {
@@ -68,11 +70,14 @@ impl UserCredentials {
         user_code: &str,
         redirect_uri: String,
     ) -> AuthResult<Self> {
+        let verifier = (*CODE_CHALLENGE.lock()).clone().unwrap().1;
+
         let client_info = json!({
             "grant_type": "authorization_code",
             "client_id": client_id,
             "client_secret": client_secret,
             "redirect_uri": url_escape::encode_component(&redirect_uri),
+            "code_verifier": verifier,
             "code": user_code,
         });
 

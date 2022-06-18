@@ -14,6 +14,8 @@ use net::get_loopback;
 
 use auth::{callback, client::credentials::ClientInfo, redirect, user::UserCredentials};
 
+use crate::auth::user::get_challenge;
+
 type Sender = mpsc::UnboundedSender<RedirectQuery>;
 
 lazy_static! {
@@ -23,6 +25,7 @@ lazy_static! {
 
 static CLOSE_SERVER: Mutex<Option<Sender>> = const_mutex(None);
 static USER_CODE: Mutex<Option<String>> = const_mutex(None);
+static CODE_CHALLENGE: Mutex<Option<(String, String)>> = const_mutex(None);
 
 #[derive(Debug, Deserialize)]
 pub struct RedirectQuery {
@@ -55,6 +58,10 @@ async fn main() -> anyhow::Result<()> {
     match open::that(&address) {
         Ok(()) => tracing::debug!("Opened login page in web browser"),
         Err(e) => tracing::error!("Failed to open login page in web browser: {}", e),
+    }
+
+    {
+        *CODE_CHALLENGE.lock() = Some(get_challenge()?);
     }
 
     axum::Server::bind(&addr)

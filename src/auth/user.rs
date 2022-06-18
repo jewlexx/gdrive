@@ -113,10 +113,7 @@ impl UserCredentials {
             .context("cannot convert value to object")?
             .get("error_description")
         {
-            tracing::error!(
-                "with code {response_code}:
-            {desc}"
-            );
+            tracing::error!("with code {response_code}:\n {desc}");
             panic!();
         }
 

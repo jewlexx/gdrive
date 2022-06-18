@@ -52,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::debug!("Listening on http://{address}");
 
-    match open::that(address) {
+    match open::that(&address) {
         Ok(()) => tracing::debug!("Opened login page in web browser"),
         Err(e) => tracing::error!("Failed to open login page in web browser: {}", e),
     }
@@ -72,10 +72,13 @@ async fn main() -> anyhow::Result<()> {
 
     let user_code = &*USER_CODE.lock().clone().context("no user code")?;
 
+    let redirect_uri = format!("http://{address}/");
+
     let user_credentials = UserCredentials::get_credentials(
         &CLIENT_INFO.credentials.client_id,
         &CLIENT_INFO.credentials.client_secret,
         user_code,
+        redirect_uri,
     )
     .await?;
 

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -18,38 +20,61 @@ pub struct UserCredentials {
     pub refresh_token: String,
 }
 
+fn json_to_hashmap(lookup: Value) -> HashMap<String, Value> {
+    let keys = lookup.as_object().unwrap().keys().collect::<Vec<_>>();
+
+    let mut map = HashMap::new();
+
+    for key in keys {
+        let varname = key.to_owned();
+        let value = &lookup[&varname];
+        map.insert(varname, value.clone());
+    }
+
+    map
+}
+
 impl UserCredentials {
     pub async fn get_credentials(
         client_id: &str,
         client_secret: &str,
         user_code: &str,
+        redirect_uri: String,
     ) -> AuthResult<Self> {
         let client_info = json!({
             "grant_type": "authorization_code",
             "client_id": client_id,
             "client_secret": client_secret,
-            "redirect_uri": url_escape::encode_component("http://localhost"),
+            "redirect_uri": url_escape::encode_component(&redirect_uri),
             "code": user_code,
         });
 
-        let response: Value = reqwest::Client::new()
+        println!("{}", &client_info.to_string());
+
+        let response = reqwest::Client::new()
             .post("https://www.googleapis.com/oauth2/v4/token")
             .header("Content-Type", "application/x-www-form-urlencoded")
-            .json(&client_info)
+            .header(
+                "Accept",
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            )
+            .form(&json_to_hashmap(client_info))
             .send()
-            .await?
-            .json()
             .await?;
 
-        if let Some(desc) = response
+        let response_code = response.status();
+
+        let response_json: Value = response.json().await?;
+
+        if let Some(desc) = response_json
             .as_object()
             .context("cannot convert value to object")?
             .get("error_description")
         {
-            tracing::error!("{desc}");
+            tracing::error!("with code {response_code}: \n\n {desc}");
             panic!();
         }
 
-        Ok(serde_json::from_value(response)?)
+        Ok(serde_json::from_value(response_json)?)
     }
 }

@@ -3,8 +3,35 @@ use std::collections::HashMap;
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 
 use super::AuthResult;
+
+pub fn get_challenge() -> AuthResult<(String, String)> {
+    use rand::Rng;
+
+    // Characters allowed to be used in the verifier
+    const CHARACTERS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+    let chars = CHARACTERS.chars().collect::<Vec<_>>();
+
+    let mut rng = rand::thread_rng();
+    let mut verifier = String::new();
+
+    for _ in 0..128 {
+        let index = rng.gen_range(0..chars.len());
+        verifier.push(chars[index]);
+    }
+
+    let mut hasher = Sha256::new();
+    hasher.update(verifier.as_bytes());
+
+    let res = hasher.finalize();
+
+    let raw = hex::decode(res)?;
+    let digest = String::from_utf8(raw)?;
+
+    Ok((verifier, digest))
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserCredentials {

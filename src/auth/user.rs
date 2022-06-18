@@ -9,6 +9,18 @@ use crate::CODE_CHALLENGE;
 
 use super::AuthResult;
 
+fn encode_base64_url(unencoded: String) -> String {
+    let mut base64 = unencoded;
+
+    // Converts base64 to base64url.
+    base64 = base64.replace('+', "-");
+    base64 = base64.replace('/', "_");
+    // Strips padding.
+    base64 = base64.replace('=', "");
+
+    base64
+}
+
 pub fn get_challenge() -> AuthResult<(String, String)> {
     use rand::Rng;
 
@@ -31,7 +43,7 @@ pub fn get_challenge() -> AuthResult<(String, String)> {
 
     let digest = format!("{:X}", res);
 
-    Ok((verifier, digest))
+    Ok((encode_base64_url(verifier), encode_base64_url(digest)))
 }
 
 #[derive(Debug, Serialize, Deserialize)]

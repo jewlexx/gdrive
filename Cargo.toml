@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.57"
 axum = "0.5.7"
+base64 = "0.13.0"
 ctrlc = "3.2.2"
 hex = "0.4.3"
 lazy_static = "1.4.0"

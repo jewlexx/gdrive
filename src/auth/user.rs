@@ -29,8 +29,7 @@ pub fn get_challenge() -> AuthResult<(String, String)> {
 
     let res = hasher.finalize();
 
-    let raw = hex::decode(res)?;
-    let digest = String::from_utf8(raw)?;
+    let digest = format!("{:X}", res);
 
     Ok((verifier, digest))
 }

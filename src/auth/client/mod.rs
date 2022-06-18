@@ -2,8 +2,6 @@ use crate::{CLIENT_INFO, CODE_CHALLENGE, REDIRECT_ADDR};
 
 pub mod credentials;
 
-pub const AUTH_ENDPOINT: &str = "https://accounts.google.com/o/oauth2/v2/auth";
-
 pub fn get_redirect() -> String {
     let addr = REDIRECT_ADDR.to_string();
     let info = &CLIENT_INFO.credentials;
@@ -16,7 +14,7 @@ pub fn get_redirect() -> String {
         client_id = info.client_id,
         code_challenge = challenge,
     );
-    let mut url = String::from(AUTH_ENDPOINT);
+    let mut url = CLIENT_INFO.credentials.auth_uri.clone();
     url.push('?');
 
     url_escape::encode_query_to_string(query, &mut url);

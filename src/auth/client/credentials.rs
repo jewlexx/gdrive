@@ -8,13 +8,13 @@ impl ClientInfo {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClientInfo {
     #[serde(rename = "installed")]
     pub credentials: Credentials,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Credentials {
     pub client_id: String,
     pub project_id: String,

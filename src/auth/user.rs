@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
-use crate::CODE_CHALLENGE;
+use crate::{CLIENT_INFO, CODE_CHALLENGE};
 
 use super::AuthResult;
 
@@ -95,7 +95,7 @@ impl UserCredentials {
         println!("{}", &client_info.to_string());
 
         let response = reqwest::Client::new()
-            .post("https://www.googleapis.com/oauth2/v4/token")
+            .post(&CLIENT_INFO.credentials.token_uri)
             .header(
                 "Accept",
                 "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",

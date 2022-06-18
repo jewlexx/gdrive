@@ -3,6 +3,7 @@ mod net;
 
 use std::net::SocketAddr;
 
+use anyhow::Context;
 use axum::{routing::get, Router};
 use lazy_static::lazy_static;
 use parking_lot::{const_mutex, Mutex};
@@ -62,14 +63,14 @@ async fn main() -> anyhow::Result<()> {
             let query = rx.recv().await;
 
             if let Some(query) = query {
-                let code = query.code.unwrap();
+                let code = query.code.expect("no code in query");
                 tracing::info!("Got code: {}", code);
                 *USER_CODE.lock() = Some(code);
             }
         })
         .await?;
 
-    let user_code = &*USER_CODE.lock().clone().unwrap();
+    let user_code = &*USER_CODE.lock().clone().context("no user code")?;
 
     let user_credentials = UserCredentials::get_credentials(
         &CLIENT_INFO.credentials.client_id,

@@ -30,8 +30,8 @@ pub async fn callback(query: Query<RedirectQuery>) -> impl IntoResponse {
             error: None,
         };
 
-        let tx = CLOSE_SERVER.lock().clone().unwrap();
-        tx.send(client_info).unwrap();
+        let tx = CLOSE_SERVER.lock().clone().expect("cannot close server");
+        tx.send(client_info).expect("cannot close server");
         drop(tx);
 
         Response::new("Successfully redirected".into())

@@ -53,7 +53,6 @@ impl UserCredentials {
 
         let response = reqwest::Client::new()
             .post("https://www.googleapis.com/oauth2/v4/token")
-            .header("Content-Type", "application/x-www-form-urlencoded")
             .header(
                 "Accept",
                 "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",

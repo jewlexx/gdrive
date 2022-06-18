@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserCredentials {
@@ -29,17 +29,20 @@ impl UserCredentials {
             "code": user_code,
         });
 
-        let response = reqwest::Client::new()
+        let response: Value = reqwest::Client::new()
             .post("https://www.googleapis.com/oauth2/v4/token")
             .header("Content-Type", "application/x-www-form-urlencoded")
             .json(&client_info)
             .send()
             .await?
-            .text()
+            .json()
             .await?;
 
-        tracing::debug!("{}", response);
+        if let Some(desc) = response.as_object().unwrap().get("error_description") {
+            tracing::error!("{desc}");
+            panic!();
+        }
 
-        Ok(serde_json::from_str(&response).unwrap())
+        Ok(response)
     }
 }

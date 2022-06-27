@@ -10,7 +10,7 @@ pub fn get_redirect() -> String {
     let query = format!(
         "client_id={client_id}&redirect_uri={uri}&response_type=code&scope={scopes}&code_challenge={code_challenge}&code_challenge_method=S256",
         scopes = url_escape::encode_component("https://www.googleapis.com/auth/drive"),
-        uri = url_escape::encode_component(&format!("http://{addr}/callback")),
+        uri = url_escape::encode_component(&format!("http://{addr}/oauth2callback")),
         client_id = info.client_id,
         code_challenge = challenge,
     );

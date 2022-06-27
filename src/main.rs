@@ -52,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
 
     let addr = REDIRECT_ADDR.to_owned();
 
-    let address = format!("http://{}", addr.to_string());
+    let address = format!("http://{addr}");
 
     tracing::debug!("Listening on {address}");
 

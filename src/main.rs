@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/", get(redirect))
-        .route("/callback", get(callback));
+        .route("/oauth2callback", get(callback));
 
     let (tx, mut rx) = mpsc::unbounded_channel::<RedirectQuery>();
 
@@ -79,7 +79,7 @@ async fn main() -> anyhow::Result<()> {
 
     let user_code = &*USER_CODE.lock().clone().context("no user code")?;
 
-    let redirect_uri = format!("http://{address}/");
+    let redirect_uri = format!("http://{address}");
 
     let user_credentials = UserCredentials::get_credentials(
         &CLIENT_INFO.credentials.client_id,

@@ -33,6 +33,7 @@ pub struct RedirectQuery {
     pub error: Option<String>,
 }
 
+// If the `tokio::main` macro is not found, switch to pre-release rust-analyzer for now.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
